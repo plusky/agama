@@ -48,6 +48,14 @@ module Agama
       MANUAL_STARTMODES = ["manual", "off"].freeze
       private_constant :MANUAL_STARTMODES
 
+      # Settings that a port of a bond or a bridge cannot have, as its controller holds the IP
+      # configuration.
+      IP_SETTINGS = [
+        "method4", "method6", "addresses", "gateway4", "gateway6", "nameservers",
+        "dnsSearchList", "ignoreAutoDns"
+      ].freeze
+      private_constant :IP_SETTINGS
+
       # Agama methods (method4 and method6) for the boot protocols that do not depend on whether
       # IPv6 is wanted or not.
       BOOTPROTO_METHODS = {
@@ -75,6 +83,7 @@ module Agama
         return {} if interfaces.empty?
 
         connections = interfaces.map { |i| read_connection(i) }
+        drop_ports_ip_settings(connections)
         { "connections" => connections }
       end
 
@@ -108,6 +117,21 @@ module Agama
         conn.merge!(dns)
 
         conn
+      end
+
+      # Removes the IP settings of the connections that are ports of a bond or a bridge.
+      #
+      # @param connections [Array<Hash>] Agama connections.
+      def drop_ports_ip_settings(connections)
+        ports = connections.flat_map do |conn|
+          ["bond", "bridge"].flat_map { |type| conn.dig(type, "ports") || [] }
+        end
+
+        connections.each do |conn|
+          next unless ports.include?(conn["interface"]) || ports.include?(conn["id"])
+
+          IP_SETTINGS.each { |key| conn.delete(key) }
+        end
       end
 
       # Converts AutoYaST's startmode to the Agama "autoconnect" and "status" settings.
