@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Tue Sep 29 13:53:03 UTC 2026 - Knut Anderssen <kanderssen@suse.com>
+
+- Fix the proxy section of the profile JSON schema to use the
+  same property names as the proxy config (http, https, ftp,
+  gopher, socks, socks5) and reject unknown properties instead of
+  silently ignoring them (gh#agama-project/agama#XXXX).
+
+-------------------------------------------------------------------
 Mon Sep 28 09:10:11 UTC 2026 - José Iván López González <jlopez@suse.com>
 
 - Allow finishing installation independently on the current stage
